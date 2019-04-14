@@ -9,21 +9,20 @@ import (
 
 func Validate() error {
 	repo := Repository{}
-	req := webhook.AdmissionRequest{
-		Object: &repo,
-	}
+	req := webhook.NewAdmissionRequest(repo)
 
 	err := json.NewDecoder(os.Stdin).Decode(&req)
 	if err != nil {
 		return err
 	}
 
-	res := webhook.AdmissionResponse{
-		UID: req.UID,
-	}
-
+	res := webhook.NewAdmissionResponse(req)
 	err = repo.Validate()
-	res.Allowed = (err == nil)
+	if err != nil {
+		res.SetFailure(err.Error())
+	} else {
+		res.SetSuccess()
+	}
 
 	err = json.NewEncoder(os.Stdout).Encode(&res)
 	if err != nil {

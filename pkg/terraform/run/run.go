@@ -4,6 +4,8 @@ import (
 	"errors"
 	"log"
 	"os"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var logger *log.Logger
@@ -13,29 +15,28 @@ func init() {
 }
 
 type Run struct {
-	APIVersion string      `json:"apiVersion"`
-	Kind       string      `json:"kind"`
-	Metadata   interface{} `json:"metadata"`
-	Spec       RunSpec     `json:"spec"`
-	Status     RunStatus   `json:"status"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   RunSpec   `json:"spec"`
+	Status RunStatus `json:"status"`
 }
 
 func (r *Run) Validate() error {
-	err := r.Spec.Validate()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return r.Spec.Validate()
 }
 
 type RunSpec struct {
-	Source    RunSpecSource     `json:"source"`
+	Source    *RunSpecSource    `json:"source"`
 	Workspace string            `json:"workspace"`
 	Vars      map[string]string `json:"vars,omitempty"`
 }
 
 func (r *RunSpec) Validate() error {
+	if r.Source == nil {
+		return errors.New("source must be specified")
+	}
+
 	err := r.Source.Validate()
 	if err != nil {
 		return err

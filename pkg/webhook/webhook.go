@@ -1,11 +1,42 @@
 package webhook
 
+import (
+	"k8s.io/api/admission/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
 type AdmissionRequest struct {
-	UID    string      `json:"uid"`
+	v1beta1.AdmissionRequest
 	Object interface{} `json:"object"`
 }
 
+func NewAdmissionRequest(object interface{}) *AdmissionRequest {
+	return &AdmissionRequest{
+		AdmissionRequest: v1beta1.AdmissionRequest{},
+		Object:           object,
+	}
+}
+
 type AdmissionResponse struct {
-	UID     string `json:"uid"`
-	Allowed bool   `json:"allowed"`
+	v1beta1.AdmissionResponse
+}
+
+func NewAdmissionResponse(req *AdmissionRequest) *AdmissionResponse {
+	return &AdmissionResponse{
+		v1beta1.AdmissionResponse{
+			UID: req.UID,
+		},
+	}
+}
+
+func (r *AdmissionResponse) SetSuccess() {
+	r.Allowed = true
+}
+
+func (r *AdmissionResponse) SetFailure(msg string) {
+	r.Allowed = false
+	r.Result = &metav1.Status{
+		Status: "Failure",
+		Reason: metav1.StatusReason(msg),
+	}
 }
