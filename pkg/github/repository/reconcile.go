@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 	"os"
 	"time"
 
@@ -67,14 +68,14 @@ func updateRepository(repo *Repository) (string, error) {
 		DefaultBranch: repo.Spec.DefaultBranch,
 	}
 
-	logger.Print("Updating repository")
+	log.Print("Updating repository")
 	updated, _, err := client.Repositories.Edit(context.TODO(), repo.Spec.Owner, repo.Name, &r)
 
 	return *updated.HTMLURL, err
 }
 
 func updateTopics(repo *Repository) error {
-	logger.Print("Updating topics")
+	log.Print("Updating topics")
 	_, _, err := client.Repositories.ReplaceAllTopics(context.TODO(), repo.Spec.Owner, repo.Name, repo.Spec.Topics)
 	return err
 }
@@ -128,7 +129,7 @@ func updateLabels(repo *Repository) error {
 			Description: l.Description,
 		}
 
-		logger.Printf("Creating label %s", l.Name)
+		log.Printf("Creating label %s", l.Name)
 		_, _, err := client.Issues.CreateLabel(context.TODO(), repo.Spec.Owner, repo.Name, &label)
 		if err != nil {
 			return err
@@ -142,7 +143,7 @@ func updateLabels(repo *Repository) error {
 			Description: l.Description,
 		}
 
-		logger.Printf("Updating label %s", l.Name)
+		log.Printf("Updating label %s", l.Name)
 		_, _, err := client.Issues.EditLabel(context.TODO(), repo.Spec.Owner, repo.Name, l.Name, &label)
 		if err != nil {
 			return err
@@ -150,7 +151,7 @@ func updateLabels(repo *Repository) error {
 	}
 
 	for _, name := range deleteLabels {
-		logger.Printf("Deleting label %s", name)
+		log.Printf("Deleting label %s", name)
 		_, err := client.Issues.DeleteLabel(context.TODO(), repo.Spec.Owner, repo.Name, name)
 		if err != nil {
 			return err

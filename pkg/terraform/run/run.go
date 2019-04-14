@@ -2,17 +2,9 @@ package run
 
 import (
 	"errors"
-	"log"
-	"os"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-var logger *log.Logger
-
-func init() {
-	logger = log.New(os.Stderr, "", log.Ldate|log.Ltime)
-}
 
 type Run struct {
 	metav1.TypeMeta   `json:",inline"`

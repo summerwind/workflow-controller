@@ -2,18 +2,10 @@ package message
 
 import (
 	"errors"
-	"log"
-	"os"
 
 	"github.com/nlopes/slack"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-var logger *log.Logger
-
-func init() {
-	logger = log.New(os.Stderr, "", log.Ldate|log.Ltime)
-}
 
 type Message struct {
 	metav1.TypeMeta   `json:",inline"`

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -15,6 +16,8 @@ var rootCmd = &cobra.Command{
 }
 
 func main() {
+	log.SetOutput(os.Stderr)
+
 	err := rootCmd.Execute()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v", err)

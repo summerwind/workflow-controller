@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -40,7 +41,7 @@ func Reconcile() error {
 			return err
 		}
 
-		logger.Print("Fetching source...")
+		log.Print("Fetching source...")
 		commit, err = checkout(r.Spec.Source.Git)
 		if err != nil {
 			return err
@@ -61,21 +62,21 @@ func Reconcile() error {
 		Logger:  os.Stderr,
 	}
 
-	logger.Print("Initializing terraform...")
+	log.Print("Initializing terraform...")
 	err = tf.Init()
 	if err != nil {
 		return err
 	}
 
 	if r.Spec.Workspace != "" {
-		logger.Print("Changing workspace...")
+		log.Print("Changing workspace...")
 		err = tf.SelectWorkspace(r.Spec.Workspace, true)
 		if err != nil {
 			return err
 		}
 	}
 
-	logger.Print("Applying terraform configuration...")
+	log.Print("Applying terraform configuration...")
 	err = tf.Apply(r.Spec.Vars)
 	if err != nil {
 		return err
