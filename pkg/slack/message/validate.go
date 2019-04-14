@@ -8,7 +8,11 @@ import (
 )
 
 func Validate() error {
-	req := AdmissionRequest{}
+	msg := Message{}
+	req := webhook.AdmissionRequest{
+		Object: &msg,
+	}
+
 	err := json.NewDecoder(os.Stdin).Decode(&req)
 	if err != nil {
 		return err
@@ -18,7 +22,7 @@ func Validate() error {
 		UID: req.UID,
 	}
 
-	err = req.Object.Validate()
+	err = msg.Validate()
 	res.Allowed = (err == nil)
 
 	err = json.NewEncoder(os.Stdout).Encode(&res)

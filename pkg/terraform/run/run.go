@@ -4,8 +4,6 @@ import (
 	"errors"
 	"log"
 	"os"
-
-	"github.com/summerwind/workflow-controller/pkg/webhook"
 )
 
 var logger *log.Logger
@@ -106,9 +104,4 @@ type RunStatus struct {
 
 type State struct {
 	Resource *Run `json:"resource"`
-}
-
-type AdmissionRequest struct {
-	webhook.AdmissionRequest
-	Object *Run `json:"object"`
 }

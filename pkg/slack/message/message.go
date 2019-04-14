@@ -7,8 +7,6 @@ import (
 
 	"github.com/nlopes/slack"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/summerwind/workflow-controller/pkg/webhook"
 )
 
 var logger *log.Logger
@@ -55,9 +53,4 @@ type MessageStatus struct {
 
 type State struct {
 	Resource *Message `json:"resource"`
-}
-
-type AdmissionRequest struct {
-	webhook.AdmissionRequest
-	Object *Message `json:"object"`
 }

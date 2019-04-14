@@ -1,7 +1,8 @@
 package webhook
 
 type AdmissionRequest struct {
-	UID string `json:"uid"`
+	UID    string      `json:"uid"`
+	Object interface{} `json:"object"`
 }
 
 type AdmissionResponse struct {
