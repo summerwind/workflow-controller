@@ -8,8 +8,10 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "slack-controller",
-	Short: "Manage custom resource for Slack",
+	Use:           "slack-controller",
+	Short:         "Manage custom resource for Slack",
+	SilenceErrors: true,
+	SilenceUsage:  true,
 }
 
 func main() {

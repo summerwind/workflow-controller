@@ -8,8 +8,10 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "github-controller",
-	Short: "Manage custom resource for GitHub",
+	Use:           "github-controller",
+	Short:         "Manage custom resource for GitHub",
+	SilenceErrors: true,
+	SilenceUsage:  true,
 }
 
 func main() {

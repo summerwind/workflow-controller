@@ -8,8 +8,10 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "terraform-controller",
-	Short: "Manage custom resource for Terraform",
+	Use:           "terraform-controller",
+	Short:         "Manage custom resource for Terraform",
+	SilenceErrors: true,
+	SilenceUsage:  true,
 }
 
 func main() {
