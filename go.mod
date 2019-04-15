@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/gogo/protobuf v1.2.1 // indirect
+	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-github/v24 v24.0.1
 	github.com/google/gofuzz v1.0.0 // indirect
 	github.com/gorilla/websocket v1.4.0 // indirect
