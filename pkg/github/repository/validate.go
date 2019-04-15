@@ -9,7 +9,7 @@ import (
 
 func Validate() error {
 	repo := Repository{}
-	req := webhook.NewAdmissionRequest(repo)
+	req := webhook.NewAdmissionRequest(&repo)
 
 	err := json.NewDecoder(os.Stdin).Decode(&req)
 	if err != nil {
