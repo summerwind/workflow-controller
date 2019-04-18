@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: feed-controller
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: feed-controller
+rules:
+- apiGroups:
+  - workflow.summerwind.dev
+  resources:
+  - subscriptions
+  - entries
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: feed-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: feed-controller
+subjects:
+- kind: ServiceAccount
+  name: feed-controller
+  namespace: kube-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: feed-controller
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: feed-controller
+  template:
+    metadata:
+      labels:
+        app: feed-controller
+    spec:
+      containers:
+      - name: feed-controller
+        image: summerwind/feed-controller:latest
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: secret-volume
+          mountPath: /etc/tls
+        ports:
+        - containerPort: 443
+        resources:
+          requests:
+            cpu: 100m
+            memory: 20Mi
+      volumes:
+      - name: secret-volume
+        secret:
+          secretName: feed-controller
+      serviceAccountName: feed-controller
+      terminationGracePeriodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: feed-controller
+  namespace: kube-system
+spec:
+  selector:
+    app: feed-controller
+  ports:
+  - protocol: TCP
+    port: 443
+    targetPort: 443

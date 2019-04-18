@@ -1,0 +1,33 @@
+controllers:
+- name: feed-subscription-controller
+  resource:
+    group: feed.workflow.summerwind.dev
+    version: v1alpha1
+    kind: Subscription
+  dependents:
+  - group: feed.workflow.summerwind.dev
+    version: v1alpha1
+    kind: Entry
+  reconciler:
+    exec:
+      command: /bin/feed-controller subscription reconcile
+      timeout: 60s
+      debug: true
+  syncer:
+    interval: 10m
+
+webhook:
+  port: 443
+  tls:
+    certFile: /etc/tls/server.pem
+    keyFile: /etc/tls/server-key.pem
+  handlers:
+  - resource:
+      group: feed.workflow.summerwind.dev
+      version: v1alpha1
+      kind: Subscription
+    validator:
+      exec:
+        command: /bin/feed-controller subscription validate
+        timeout: 60s
+        debug: true
