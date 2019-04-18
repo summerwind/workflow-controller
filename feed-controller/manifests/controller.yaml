@@ -10,10 +10,10 @@ metadata:
   name: feed-controller
 rules:
 - apiGroups:
-  - workflow.summerwind.dev
+  - feed.workflow.summerwind.dev
   resources:
-  - subscriptions
-  - entries
+  - subscription
+  - entry
   verbs:
   - get
   - list

@@ -10,7 +10,8 @@ controllers:
     kind: Entry
   reconciler:
     exec:
-      command: /bin/feed-controller subscription reconcile
+      command: /bin/feed-controller
+      args: ["subscription", "reconcile"]
       timeout: 60s
       debug: true
   syncer:
@@ -28,6 +29,7 @@ webhook:
       kind: Subscription
     validator:
       exec:
-        command: /bin/feed-controller subscription validate
+        command: /bin/feed-controller
+        args: ["subscription", "validate"]
         timeout: 60s
         debug: true
