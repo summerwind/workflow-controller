@@ -12,6 +12,8 @@ import (
 	"github.com/summerwind/workflow-controller/pkg/feed/entry"
 )
 
+var fetchMergin int64 = 30
+
 type State struct {
 	Object     *Subscription   `json:"object"`
 	Dependents StateDependents `json:"dependents"`
@@ -68,7 +70,10 @@ func Reconcile() error {
 		state.Dependents.Entries = append(state.Dependents.Entries, newEntry)
 	}
 
-	state.Object.Status.LastFetchedTime = fetchedTime
+	// Prevent time update loolping by using
+	if state.Object.Status.LastFetchedTime+fetchMergin < fetchedTime {
+		state.Object.Status.LastFetchedTime = fetchedTime
+	}
 
 	err = json.NewEncoder(os.Stdout).Encode(&state)
 	if err != nil {
