@@ -1,0 +1,17 @@
+version: '2'
+
+vars:
+  NAME: workflow-controller
+  VERSION: 0.1.0
+
+tasks:
+  build:
+    cmds:
+    - CGO_ENABLED=0 go build -o ./bin/feed-controller  ./feed-controller
+    - CGO_ENABLED=0 go build -o ./bin/slack-controller ./slack-controller
+    - CGO_ENABLED=0 go build -o ./bin/github-controller ./github-controller
+  build-container:
+    cmds:
+    - docker build --target feed-controller   -t summerwind/feed-controller:latest .
+    - docker build --target slack-controller  -t summerwind/slack-controller:latest .
+    - docker build --target github-controller -t summerwind/github-controller:latest .
