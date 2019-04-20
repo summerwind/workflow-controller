@@ -1,10 +1,13 @@
-package subscription
+package v1alpha1
 
 import (
 	"errors"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+const timeMergin = 30
 
 type Subscription struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -16,6 +19,14 @@ type Subscription struct {
 
 func (s *Subscription) Validate() error {
 	return s.Spec.Validate()
+}
+
+func (s *Subscription) NeedsUpdate() bool {
+	if s.Status.LastFetchTime+timeMergin > time.Now().Unix() {
+		return false
+	}
+
+	return true
 }
 
 type SubscriptionSpec struct {
@@ -31,5 +42,5 @@ func (s *SubscriptionSpec) Validate() error {
 }
 
 type SubscriptionStatus struct {
-	LastFetchedTime int64 `json:"lastFetchedTime"`
+	LastFetchTime int64 `json:"lastFetchTime"`
 }

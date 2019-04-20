@@ -1,4 +1,4 @@
-package repository
+package v1alpha1
 
 import (
 	"errors"
@@ -8,7 +8,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const timeMergin = 10
+const repoTimeMergin = 10
 
 type Repository struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -27,7 +27,7 @@ func (r *Repository) NeedsUpdate() bool {
 		return false
 	}
 
-	if r.Status.LastUpdateTime+timeMergin > time.Now().Unix() {
+	if r.Status.LastUpdateTime+repoTimeMergin > time.Now().Unix() {
 		return false
 	}
 

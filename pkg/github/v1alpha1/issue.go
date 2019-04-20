@@ -1,4 +1,4 @@
-package issue
+package v1alpha1
 
 import (
 	"errors"
@@ -8,7 +8,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const timeMergin = 10
+const issueTimeMergin = 10
 
 type Issue struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -27,7 +27,7 @@ func (i *Issue) NeedsUpdate() bool {
 		return false
 	}
 
-	if i.Status.LastUpdateTime+timeMergin > time.Now().Unix() {
+	if i.Status.LastUpdateTime+issueTimeMergin > time.Now().Unix() {
 		return false
 	}
 

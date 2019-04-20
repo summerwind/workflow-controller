@@ -1,4 +1,4 @@
-package subscription
+package feed
 
 import (
 	"encoding/xml"

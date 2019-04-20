@@ -1,20 +1,24 @@
 package webhook
 
 import (
+	"encoding/json"
+
 	"k8s.io/api/admission/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type AdmissionRequest struct {
 	v1beta1.AdmissionRequest
-	Object interface{} `json:"object"`
 }
 
-func NewAdmissionRequest(object interface{}) *AdmissionRequest {
+func NewAdmissionRequest() *AdmissionRequest {
 	return &AdmissionRequest{
 		AdmissionRequest: v1beta1.AdmissionRequest{},
-		Object:           object,
 	}
+}
+
+func (r *AdmissionRequest) GetObject(object interface{}) error {
+	return json.Unmarshal(r.Object.Raw, object)
 }
 
 type AdmissionResponse struct {
