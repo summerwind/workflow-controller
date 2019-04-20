@@ -6,9 +6,14 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 	"time"
+
+	"github.com/summerwind/workflow-controller/pkg/slack/config"
 )
+
+type State struct {
+	Object *Message `json:"object"`
+}
 
 func Reconcile() error {
 	state := State{}
@@ -17,17 +22,21 @@ func Reconcile() error {
 		return err
 	}
 
-	if state.Resource.Status.SendTime == 0 {
-		channels := getChannels()
-		url, ok := channels[state.Resource.Spec.Channel]
-		if !ok {
-			return fmt.Errorf("invalid channel name: %v", state.Resource.Spec.Channel)
-		}
-		if url == "" {
-			return fmt.Errorf("invalid channel URL: %v", state.Resource.Spec.Channel)
+	if state.Object.Status.SendTime == 0 {
+		c, err := config.Load()
+		if err != nil {
+			return fmt.Errorf("failed to load config: %v", err)
 		}
 
-		buf, err := json.Marshal(state.Resource.Spec)
+		url, ok := c.Channels[state.Object.Spec.Channel]
+		if !ok {
+			return fmt.Errorf("invalid channel name: %v", state.Object.Spec.Channel)
+		}
+		if url == "" {
+			return fmt.Errorf("invalid channel URL: %v", state.Object.Spec.Channel)
+		}
+
+		buf, err := json.Marshal(state.Object.WebhookMessage())
 		if err != nil {
 			return err
 		}
@@ -41,7 +50,7 @@ func Reconcile() error {
 			return fmt.Errorf("unexpected response status: %v", res.Status)
 		}
 
-		state.Resource.Status.SendTime = time.Now().Unix()
+		state.Object.Status.SendTime = time.Now().Unix()
 	}
 
 	err = json.NewEncoder(os.Stdout).Encode(&state)
@@ -50,18 +59,4 @@ func Reconcile() error {
 	}
 
 	return nil
-}
-
-func getChannels() map[string]string {
-	channels := map[string]string{}
-
-	chStr := os.Getenv("SLACK_CHANNELS")
-	chunks := strings.Split(chStr, ",")
-	for _, chunk := range chunks {
-		chunk = strings.TrimSpace(chunk)
-		nameAndURL := strings.Split(chunk, "=")
-		channels[nameAndURL[0]] = nameAndURL[1]
-	}
-
-	return channels
 }

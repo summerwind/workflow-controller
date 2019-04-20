@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/summerwind/workflow-controller/pkg/slack/config"
 	"github.com/summerwind/workflow-controller/pkg/webhook"
 )
 
@@ -21,7 +22,19 @@ func Validate() error {
 	if err != nil {
 		res.SetFailure(err.Error())
 	} else {
-		res.SetSuccess()
+		c, err := config.Load()
+		if err != nil {
+			res.SetFailure("internal error: failed to load config")
+		}
+
+		url, ok := c.Channels[msg.Spec.Channel]
+		if !ok {
+			res.SetFailure("invalid channel name")
+		} else if url == "" {
+			res.SetFailure("invalid channel URL")
+		} else {
+			res.SetSuccess()
+		}
 	}
 
 	err = json.NewEncoder(os.Stdout).Encode(&res)

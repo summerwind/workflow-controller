@@ -1,0 +1,31 @@
+controllers:
+- name: slack-message-controller
+  resource:
+    group: slack.workflow.summerwind.dev
+    version: v1alpha1
+    kind: Message
+  reconciler:
+    exec:
+      command: /bin/slack-controller
+      args: ["message", "reconcile"]
+      timeout: 60s
+      debug: true
+  syncer:
+    interval: 10m
+
+webhook:
+  port: 443
+  tls:
+    certFile: /etc/tls/server.pem
+    keyFile: /etc/tls/server-key.pem
+  handlers:
+  - resource:
+      group: slack.workflow.summerwind.dev
+      version: v1alpha1
+      kind: Message
+    validator:
+      exec:
+        command: /bin/slack-controller
+        args: ["message", "validate"]
+        timeout: 60s
+        debug: true

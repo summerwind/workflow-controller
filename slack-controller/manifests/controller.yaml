@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: slack-controller
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: slack-controller
+rules:
+- apiGroups:
+  - slack.workflow.summerwind.dev
+  resources:
+  - message
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: slack-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: slack-controller
+subjects:
+- kind: ServiceAccount
+  name: slack-controller
+  namespace: kube-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: slack-controller
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: slack-controller
+  template:
+    metadata:
+      labels:
+        app: slack-controller
+    spec:
+      containers:
+      - name: slack-controller
+        image: summerwind/slack-controller:latest
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: tls
+          mountPath: /etc/tls
+          readOnly: true
+        - name: config
+          mountPath: /etc/slack-controller
+          readOnly: true
+        ports:
+        - containerPort: 443
+      volumes:
+      - name: tls
+        secret:
+          secretName: slack-controller
+          items:
+          - key: server.pem
+            path: server.pem
+          - key: server-key.pem
+            path: server-key.pem
+      - name: config
+        secret:
+          secretName: slack-controller
+          items:
+          - key: config.yaml
+            path: config.yaml
+      serviceAccountName: slack-controller
+      terminationGracePeriodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: slack-controller
+  namespace: kube-system
+spec:
+  selector:
+    app: slack-controller
+  ports:
+  - protocol: TCP
+    port: 443
+    targetPort: 443
