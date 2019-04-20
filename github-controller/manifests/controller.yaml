@@ -1,0 +1,100 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: github-controller
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: github-controller
+rules:
+- apiGroups:
+  - github.workflow.summerwind.dev
+  resources:
+  - repository
+  - issue
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: github-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: github-controller
+subjects:
+- kind: ServiceAccount
+  name: github-controller
+  namespace: kube-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: github-controller
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: github-controller
+  template:
+    metadata:
+      labels:
+        app: github-controller
+    spec:
+      containers:
+      - name: github-controller
+        image: summerwind/github-controller:latest
+        imagePullPolicy: Always
+        env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: github-controller
+              key: token
+        volumeMounts:
+        - name: tls
+          mountPath: /etc/tls
+          readOnly: true
+        ports:
+        - containerPort: 443
+      volumes:
+      - name: tls
+        secret:
+          secretName: github-controller
+          items:
+          - key: server.pem
+            path: server.pem
+          - key: server-key.pem
+            path: server-key.pem
+      serviceAccountName: github-controller
+      terminationGracePeriodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: github-controller
+  namespace: kube-system
+spec:
+  selector:
+    app: github-controller
+  ports:
+  - protocol: TCP
+    port: 443
+    targetPort: 443

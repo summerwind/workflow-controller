@@ -12,7 +12,9 @@ import (
 	"golang.org/x/oauth2"
 )
 
-var client *github.Client
+type State struct {
+	Object *Repository `json:"object"`
+}
 
 func Reconcile() error {
 	state := State{}
@@ -28,25 +30,56 @@ func Reconcile() error {
 
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 	tc := oauth2.NewClient(context.Background(), ts)
-	client = github.NewClient(tc)
+	client := github.NewClient(tc)
 
-	url, err := updateRepository(state.Resource)
-	if err != nil {
-		return err
+	if state.Object.Status.URL == "" {
+		var (
+			repo *github.Repository
+			res  *github.Response
+			err  error
+		)
+
+		repo, res, err = getRepository(client, state.Object)
+		if err != nil {
+			return err
+		}
+
+		if res.StatusCode == 404 {
+			repo, res, err = createRepository(client, state.Object)
+			if err != nil {
+				return err
+			}
+		}
+
+		now := time.Now().Unix()
+		state.Object.Status.URL = repo.GetHTMLURL()
+		state.Object.Status.CreationTime = now
 	}
 
-	err = updateTopics(state.Resource)
-	if err != nil {
-		return err
-	}
+	if state.Object.NeedsUpdate() {
+		repo, res, err := updateRepository(client, state.Object)
+		if err != nil {
+			return err
+		}
 
-	err = updateLabels(state.Resource)
-	if err != nil {
-		return err
-	}
+		if res.StatusCode/100 == 2 {
+			err = updateTopics(client, state.Object)
+			if err != nil {
+				return err
+			}
 
-	state.Resource.Status.URL = url
-	state.Resource.Status.LastUpdateTime = time.Now().Unix()
+			err = updateLabels(client, state.Object)
+			if err != nil {
+				return err
+			}
+
+			state.Object.Status.URL = repo.GetHTMLURL()
+			state.Object.Status.LastUpdateTime = time.Now().Unix()
+		} else if res.StatusCode == 404 {
+			// The repository seems to be deleted and needs to be recreated.
+			state.Object.Status.URL = ""
+		}
+	}
 
 	err = json.NewEncoder(os.Stdout).Encode(&state)
 	if err != nil {
@@ -56,31 +89,51 @@ func Reconcile() error {
 	return nil
 }
 
-func updateRepository(repo *Repository) (string, error) {
+func getRepository(client *github.Client, repo *Repository) (*github.Repository, *github.Response, error) {
+	return client.Repositories.Get(context.TODO(), repo.Spec.Owner, repo.Name)
+}
+
+func createRepository(client *github.Client, repo *Repository) (*github.Repository, *github.Response, error) {
 	r := github.Repository{
-		Name:          &repo.Name,
-		Description:   repo.Spec.Description,
-		Homepage:      repo.Spec.Homepage,
-		Private:       repo.Spec.Private,
-		HasIssues:     repo.Spec.HasIssues,
-		HasProjects:   repo.Spec.HasProjects,
-		HasWiki:       repo.Spec.HasWiki,
-		DefaultBranch: repo.Spec.DefaultBranch,
+		Name:        &repo.Name,
+		Description: &repo.Spec.Description,
+		Homepage:    &repo.Spec.Homepage,
+		Private:     &repo.Spec.Private,
+		HasIssues:   &repo.Spec.HasIssues,
+		HasProjects: &repo.Spec.HasProjects,
+		HasWiki:     &repo.Spec.HasWiki,
+	}
+
+	log.Print("Creating repository")
+	return client.Repositories.Create(context.TODO(), repo.Spec.Owner, &r)
+}
+
+func updateRepository(client *github.Client, repo *Repository) (*github.Repository, *github.Response, error) {
+	r := github.Repository{
+		Name:        &repo.Name,
+		Description: &repo.Spec.Description,
+		Homepage:    &repo.Spec.Homepage,
+		Private:     &repo.Spec.Private,
+		HasIssues:   &repo.Spec.HasIssues,
+		HasProjects: &repo.Spec.HasProjects,
+		HasWiki:     &repo.Spec.HasWiki,
+	}
+
+	if repo.Spec.DefaultBranch != "" {
+		r.DefaultBranch = &repo.Spec.DefaultBranch
 	}
 
 	log.Print("Updating repository")
-	updated, _, err := client.Repositories.Edit(context.TODO(), repo.Spec.Owner, repo.Name, &r)
-
-	return *updated.HTMLURL, err
+	return client.Repositories.Edit(context.TODO(), repo.Spec.Owner, repo.Name, &r)
 }
 
-func updateTopics(repo *Repository) error {
+func updateTopics(client *github.Client, repo *Repository) error {
 	log.Print("Updating topics")
 	_, _, err := client.Repositories.ReplaceAllTopics(context.TODO(), repo.Spec.Owner, repo.Name, repo.Spec.Topics)
 	return err
 }
 
-func updateLabels(repo *Repository) error {
+func updateLabels(client *github.Client, repo *Repository) error {
 	ledger := map[string]RepositoryLabel{}
 	for _, label := range repo.Spec.Labels {
 		ledger[label.Name] = label
@@ -108,7 +161,7 @@ func updateLabels(repo *Repository) error {
 				continue
 			}
 
-			if *label.Color != *l.Color || *label.Description != *l.Description {
+			if label.Color != l.GetColor() || label.Description != l.GetDescription() {
 				updateLabels = append(updateLabels, label)
 			}
 
@@ -125,8 +178,8 @@ func updateLabels(repo *Repository) error {
 	for _, l := range ledger {
 		label := github.Label{
 			Name:        &l.Name,
-			Color:       l.Color,
-			Description: l.Description,
+			Color:       &l.Color,
+			Description: &l.Description,
 		}
 
 		log.Printf("Creating label %s", l.Name)
@@ -139,8 +192,8 @@ func updateLabels(repo *Repository) error {
 	for _, l := range updateLabels {
 		label := github.Label{
 			Name:        &l.Name,
-			Color:       l.Color,
-			Description: l.Description,
+			Color:       &l.Color,
+			Description: &l.Description,
 		}
 
 		log.Printf("Updating label %s", l.Name)

@@ -11,7 +11,9 @@ import (
 	"golang.org/x/oauth2"
 )
 
-var client *github.Client
+type State struct {
+	Object *Issue `json:"object"`
+}
 
 func Reconcile() error {
 	state := State{}
@@ -20,25 +22,35 @@ func Reconcile() error {
 		return err
 	}
 
-	if state.Resource.Status.URL == "" {
-		token := os.Getenv("GITHUB_TOKEN")
-		if token == "" {
-			return errors.New("GitHub access token must be specified")
-		}
+	token := os.Getenv("GITHUB_TOKEN")
+	if token == "" {
+		return errors.New("GitHub access token must be specified")
+	}
 
-		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
-		tc := oauth2.NewClient(context.Background(), ts)
-		client = github.NewClient(tc)
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
+	tc := oauth2.NewClient(context.Background(), ts)
+	client := github.NewClient(tc)
 
-		r := state.Resource
-		issue, _, err := client.Issues.Create(context.TODO(), r.Spec.Owner, r.Spec.Repository, &r.Spec.IssueRequest)
+	if state.Object.Status.URL == "" {
+		o := state.Object
+		issue, _, err := client.Issues.Create(context.TODO(), o.Spec.Owner, o.Spec.Repository, &o.Spec.IssueRequest)
 		if err != nil {
 			return err
 		}
 
-		state.Resource.Status.URL = *issue.HTMLURL
-		state.Resource.Status.Number = *issue.Number
-		state.Resource.Status.CreationTime = time.Now().Unix()
+		now := time.Now().Unix()
+		state.Object.Status.URL = *issue.HTMLURL
+		state.Object.Status.Number = *issue.Number
+		state.Object.Status.CreationTime = now
+		state.Object.Status.LastUpdateTime = now
+	} else if state.Object.NeedsUpdate() {
+		o := state.Object
+		_, _, err := client.Issues.Edit(context.TODO(), o.Spec.Owner, o.Spec.Repository, o.Status.Number, &o.Spec.IssueRequest)
+		if err != nil {
+			return err
+		}
+
+		state.Object.Status.LastUpdateTime = time.Now().Unix()
 	}
 
 	err = json.NewEncoder(os.Stdout).Encode(&state)

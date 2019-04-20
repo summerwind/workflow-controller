@@ -2,10 +2,13 @@ package issue
 
 import (
 	"errors"
+	"time"
 
 	"github.com/google/go-github/v24/github"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+const timeMergin = 10
 
 type Issue struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -19,10 +22,23 @@ func (i *Issue) Validate() error {
 	return i.Spec.Validate()
 }
 
+func (i *Issue) NeedsUpdate() bool {
+	if !i.Spec.Update {
+		return false
+	}
+
+	if i.Status.LastUpdateTime+timeMergin > time.Now().Unix() {
+		return false
+	}
+
+	return true
+}
+
 type IssueSpec struct {
 	github.IssueRequest
 	Owner      string `json:"owner"`
 	Repository string `json:"repository"`
+	Update     bool   `json:"update"`
 }
 
 func (i *IssueSpec) Validate() error {
@@ -38,11 +54,8 @@ func (i *IssueSpec) Validate() error {
 }
 
 type IssueStatus struct {
-	URL          string `json:"url"`
-	Number       int    `json:"number"`
-	CreationTime int64  `json:"creationTime"`
-}
-
-type State struct {
-	Resource *Issue `json:"resource"`
+	URL            string `json:"url"`
+	Number         int    `json:"number"`
+	CreationTime   int64  `json:"creationTime"`
+	LastUpdateTime int64  `json:"LastUpdateTime"`
 }

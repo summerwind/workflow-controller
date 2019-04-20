@@ -1,0 +1,54 @@
+controllers:
+- name: github-repository-controller
+  resource:
+    group: github.workflow.summerwind.dev
+    version: v1alpha1
+    kind: Repository
+  reconciler:
+    exec:
+      command: /bin/github-controller
+      args: ["repository", "reconcile"]
+      timeout: 60s
+      debug: true
+  syncer:
+    interval: 10m
+- name: github-issue-controller
+  resource:
+    group: github.workflow.summerwind.dev
+    version: v1alpha1
+    kind: Issue
+  reconciler:
+    exec:
+      command: /bin/github-controller
+      args: ["issue", "reconcile"]
+      timeout: 60s
+      debug: true
+  syncer:
+    interval: 10m
+
+webhook:
+  port: 443
+  tls:
+    certFile: /etc/tls/server.pem
+    keyFile: /etc/tls/server-key.pem
+  handlers:
+  - resource:
+      group: github.workflow.summerwind.dev
+      version: v1alpha1
+      kind: Repository
+    validator:
+      exec:
+        command: /bin/github-controller
+        args: ["repository", "validate"]
+        timeout: 60s
+        debug: true
+  - resource:
+      group: github.workflow.summerwind.dev
+      version: v1alpha1
+      kind: Issue
+    validator:
+      exec:
+        command: /bin/github-controller
+        args: ["issue", "validate"]
+        timeout: 60s
+        debug: true
