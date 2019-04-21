@@ -1,0 +1,5 @@
+resources:
+- crd.yaml
+- webhook.yaml
+- secret.yaml
+- controller.yaml

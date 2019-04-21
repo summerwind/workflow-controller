@@ -67,10 +67,6 @@ spec:
           mountPath: /etc/tls
         ports:
         - containerPort: 443
-        resources:
-          requests:
-            cpu: 100m
-            memory: 20Mi
       volumes:
       - name: tls
         secret:

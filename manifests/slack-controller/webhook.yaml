@@ -1,0 +1,23 @@
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: slack-controller
+webhooks:
+- name: message.slack.workflow.summerwind.dev
+  rules:
+  - apiGroups:
+    - slack.workflow.summerwind.dev
+    apiVersions:
+    - "*"
+    resources:
+    - message
+    operations:
+    - CREATE
+    - UPDATE
+  failurePolicy: Fail
+  clientConfig:
+    service:
+      name: slack-controller
+      namespace: kube-system
+      path: /slack.workflow.summerwind.dev/v1alpha1/message/validate
+    caBundle: ""

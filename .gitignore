@@ -1,0 +1,4 @@
+manifests/deploy/secrets
+/bin
+*.pem
+*.csr

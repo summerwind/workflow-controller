@@ -1,0 +1,19 @@
+apiVersion: github.workflow.summerwind.dev/v1alpha1
+kind: Repository
+metadata:
+  name: example
+spec:
+  owner: summerwind
+  description: "An example repository"
+  homepage: ""
+  private: true
+  hasIssue: true
+  hasProjects: true
+  hasWiki: true
+  topics:
+  - example
+  labels:
+  - name: bug
+    color: ff0000
+  - name: improvement
+    color: 00ff00

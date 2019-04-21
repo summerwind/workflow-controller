@@ -1,0 +1,29 @@
+bases:
+- ../feed-controller
+- ../slack-controller
+- ../github-controller
+
+secretGenerator:
+- name: feed-controller
+  namespace: kube-system
+  behavior: replace
+  files:
+  - secrets/server.pem
+  - secrets/server-key.pem
+- name: slack-controller
+  namespace: kube-system
+  behavior: replace
+  files:
+  - secrets/server.pem
+  - secrets/server-key.pem
+  - secrets/slack/config.yaml
+- name: github-controller
+  namespace: kube-system
+  behavior: replace
+  files:
+  - secrets/server.pem
+  - secrets/server-key.pem
+  - secrets/github/token
+
+patchesStrategicMerge:
+- patches/webhook-cabundle.yaml

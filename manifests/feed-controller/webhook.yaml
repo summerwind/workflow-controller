@@ -1,0 +1,23 @@
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: feed-controller
+webhooks:
+- name: subscription.feed.workflow.summerwind.dev
+  rules:
+  - apiGroups:
+    - feed.workflow.summerwind.dev
+    apiVersions:
+    - "*"
+    resources:
+    - subscription
+    operations:
+    - CREATE
+    - UPDATE
+  failurePolicy: Fail
+  clientConfig:
+    service:
+      name: feed-controller
+      namespace: kube-system
+      path: /feed.workflow.summerwind.dev/v1alpha1/subscription/validate
+    caBundle: ""

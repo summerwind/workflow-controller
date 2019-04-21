@@ -1,0 +1,11 @@
+apiVersion: github.workflow.summerwind.dev/v1alpha1
+kind: Issue
+metadata:
+  name: issue-1555766364
+spec:
+  owner: summerwind
+  repository: example
+  title: test
+  body: |
+    This is a test.
+    This issue created by github-controller.

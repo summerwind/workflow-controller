@@ -1,0 +1,41 @@
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: github-controller
+webhooks:
+- name: repository.github.workflow.summerwind.dev
+  rules:
+  - apiGroups:
+    - github.workflow.summerwind.dev
+    apiVersions:
+    - "*"
+    resources:
+    - repository
+    operations:
+    - CREATE
+    - UPDATE
+  failurePolicy: Fail
+  clientConfig:
+    service:
+      name: github-controller
+      namespace: kube-system
+      path: /github.workflow.summerwind.dev/v1alpha1/repository/validate
+    caBundle: ""
+- name: issue.github.workflow.summerwind.dev
+  rules:
+  - apiGroups:
+    - github.workflow.summerwind.dev
+    apiVersions:
+    - "*"
+    resources:
+    - issue
+    operations:
+    - CREATE
+    - UPDATE
+  failurePolicy: Fail
+  clientConfig:
+    service:
+      name: github-controller
+      namespace: kube-system
+      path: /github.workflow.summerwind.dev/v1alpha1/issue/validate
+    caBundle: ""

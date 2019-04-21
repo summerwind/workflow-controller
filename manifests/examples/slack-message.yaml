@@ -1,0 +1,8 @@
+apiVersion: slack.workflow.summerwind.dev/v1alpha1
+kind: Message
+metadata:
+  name: activity-1555682272
+spec:
+  channel: activity
+  username: "Workflow Controller"
+  text: "Hello!"
